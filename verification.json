@@ -1,0 +1,13 @@
+{
+  "syntheticInputs": "public dataset class medians, not individual patient rows",
+  "predictions": [
+    "B",
+    "M"
+  ],
+  "probabilities": [
+    0.018234667866816847,
+    0.9851683806858704
+  ],
+  "portableModelMaxError": 0.0,
+  "threshold": 0.5
+}
