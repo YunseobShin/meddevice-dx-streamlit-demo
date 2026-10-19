@@ -53,4 +53,4 @@ with st.expander('모델·입력·검증 정보'):
     st.write('수업용 내부 분할 결과이며 외부 기관·임상 환경에서 검증하지 않았습니다. 앱은 입력을 별도 저장하지 않습니다.')
     st.write('모델 버전: '+MODEL['version'])
     st.json({'inputFeatures':FEATURES,'source':MODEL['source']})
-st.caption('배포 확인: 초기 버전 · GitHub 변경 후 이 문구의 반영 여부를 확인합니다.')
+st.caption('배포 확인: GitHub 업데이트 반영 완료 · 같은 입력의 예측값을 다시 확인합니다.')
