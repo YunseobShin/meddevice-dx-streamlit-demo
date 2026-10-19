@@ -1,18 +1,17 @@
-# ECG 부정맥 판독 시제품
+# UCI 표 데이터의 심장질환 분류 실습
 
-PhysioNet/CinC 2017의 ECG 한 기록을 정상 리듬, 심방세동, 기타 리듬, 판독 곤란으로 분류하는 수업용 앱입니다.
+공통 입력: 나이·안정 시 혈압·콜레스테롤·최대 심박수·흉통 유형.
+저장한 랜덤포레스트200개, 깊이2, 최소 말단2건. 학습181·검증61·시험61건.
+공개 데이터 예제, 직접 입력, 한 행 CSV로 질환 유무를 예측합니다.
 
-입력은 300Hz, mV 단위의 ecg_mV 열이 있는 CSV입니다. 공개 기록 네 건을 예제로 포함했습니다. 원문 출처와 기록 번호는 앱에 표시합니다.
+## Codex에 요청
 
-Codex에 다음과 같이 요청합니다.
+이 폴더의 패키지를 설치하고 Streamlit 앱을 실행해줘. 주소를 열고 공개 예제와 직접 입력에서 저장 모델의 예측값이 같은지 확인해줘.
 
-“이 폴더의 의존성을 설치하고 Streamlit 앱을 실행해서 브라우저로 열어줘. 예제 네 건의 예측과 저장 모델 결과가 일치하는지 확인해줘.”
+## 배포
 
-GitHub 게시도 Codex에 요청합니다.
+Codex에 Git·GitHub CLI 설치와 계정 연결을 요청합니다. 공개할 파일 목록을 확인하고 GitHub에 게시하도록 요청합니다. Streamlit Community Cloud에서 이 저장소의 main 브랜치, app.py를 지정합니다. Python3.11을 사용합니다.
 
-“공개 가능한 파일을 확인하고 GitHub 저장소에 게시해줘. Streamlit 배포에 쓸 저장소, 브랜치, 실행 파일, Python 버전을 알려줘.”
+입력 하나를 학습 중앙값·최빈값으로 바꾼 민감도 그림은 SHAP·인과효과와 구분합니다. 전체 모델 비교의 검증 선택은LightGBM이며, 이앱은확률평균을시연하는랜덤포레스트입니다. 임상진단용이아닙니다.
 
-모델은 랜덤 포레스트 120개 트리, 깊이16입니다. 원래 모델의 전처리와 트리를 JSON으로 내보내고 시험481건에서 예측 일치를 검증했습니다. 2,400건 교육용 부분집합의 내부 평가이며 환자 식별자가 공개되지 않아 환자 독립성은 확인할 수 없습니다. 임상 진단용 모델이 아닙니다.
-
-공식 데이터: https://physionet.org/content/challenge-2017/1.0.0/
-Clifford et al., AF Classification from a Short Single Lead ECG Recording, PhysioNet/CinC Challenge 2017. DOI: 10.22489/CinC.2017.065-469.
+데이터: UCI Heart Disease (Janosi, Steinbrunn, Pfisterer, Detrano,1989), https://archive.ics.uci.edu/dataset/45/heart+disease , CC BY4.0. 원자료의5개 열을 선택하고 질환유무를 파생했습니다. verification.json은303건의 저장모델 예측 대조 결과입니다.

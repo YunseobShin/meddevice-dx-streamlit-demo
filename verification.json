@@ -1,23 +1,10 @@
 {
-  "portable_model_max_error": 1.1102230246251565e-16,
-  "test_records": 481,
-  "examples": [
-    {
-      "example": 0,
-      "result": "판독 결과: 정상 리듬"
-    },
-    {
-      "example": 1,
-      "result": "판독 결과: 심방세동"
-    },
-    {
-      "example": 2,
-      "result": "판독 결과: 기타 리듬"
-    },
-    {
-      "example": 3,
-      "result": "판독 결과: 기타 리듬"
-    }
+  "verified_rows": 303,
+  "max_probability_error": 5.551115123125783e-16,
+  "default_example_probability": 0.7224568418878202,
+  "app_modes": [
+    "공개 데이터 예제",
+    "직접 입력"
   ],
-  "csv_upload_view": true
+  "invalid_category_rejected": true
 }
