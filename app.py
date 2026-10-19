@@ -1,56 +1,43 @@
 from pathlib import Path
-import json
-import numpy as np
-import pandas as pd
-import streamlit as st
-
-ROOT=Path(__file__).parent
-MODEL=json.loads((ROOT/'model.json').read_text(encoding='utf-8'))
-FEATURES=MODEL['features']
-st.set_page_config(page_title='의료기기 DX · 예측 시제품',layout='wide')
-st.title('저장 모델로 실행하는 예측 시제품')
-st.caption('연구용 시제품, 진단 목적 사용 불가 · 공개 K01 학습 예제')
-st.write('예시 또는 CSV를 입력하면 저장한 로지스틱 회귀의 예측과 특징 기여도를 확인할 수 있습니다.')
-mode=st.radio('입력 방법',['예시 데이터','CSV 업로드'],horizontal=True)
-data=None
-if mode=='예시 데이터':
-    choices=pd.read_csv(ROOT/'example-input.csv')
-    selected=st.selectbox('예시 선택',['예시 A','예시 B'])
-    data=choices.iloc[[0 if selected=='예시 A' else 1]].copy()
-    st.caption('예시는 공개 자료의 범주별 중앙값으로 만든 입력입니다. 개인의 진료기록이 아닙니다.')
+import json,numpy as np,pandas as pd,streamlit as st
+from features import extract,FEATURES
+from predict import predict,MODEL
+ROOT=Path(__file__).parent;labels=MODEL['labels'];examples=json.loads((ROOT/'examples.json').read_text(encoding='utf-8'))
+st.set_page_config(page_title='ECG 부정맥 판독 실습',layout='wide')
+st.title('ECG 파일로 부정맥 판독')
+st.caption('PhysioNet/CinC 2017 · 수업용 모델, 임상 진단용 아님')
+st.write('ECG 한 기록을 넣으면 정상 리듬·심방세동·기타 리듬·판독 곤란 중 하나를 예측합니다.')
+mode=st.radio('입력 방법',['공개 ECG 예제','CSV 업로드'],horizontal=True);data=None;truth=None
+if mode=='공개 ECG 예제':
+ choice=st.selectbox('ECG 선택',list(range(4)),format_func=lambda c:f'{labels[c]} 예제 · {examples[c]["record"]}',index=1)
+ data=pd.read_csv(ROOT/f'example-{choice}.csv');truth=examples[choice]['truth']
+ st.caption(f'원자료 판독 정답: {truth} · 기록 {examples[choice]["record"]}')
 else:
-    uploaded=st.file_uploader('입력 특징 30열이 있는 CSV',type=['csv'])
-    st.download_button('예시 입력 CSV 받기',(ROOT/'example-input.csv').read_bytes(),'example-input.csv','text/csv')
-    if uploaded:
-        try:data=pd.read_csv(uploaded)
-        except Exception:st.error('CSV를 읽을 수 없습니다. 구분자와 문자 인코딩을 확인해 주세요.')
+ uploaded=st.file_uploader('300Hz, mV 단위의 ECG CSV (ecg_mV 열 하나)',type=['csv'])
+ st.download_button('입력 형식 예제 받기',(ROOT/'example-1.csv').read_bytes(),'ecg-example.csv','text/csv')
+ if uploaded:
+  try:data=pd.read_csv(uploaded)
+  except Exception:st.error('CSV를 읽을 수 없습니다. 파일 형식을 확인해 주세요.');st.stop()
 if data is not None:
-    missing=[name for name in FEATURES if name not in data.columns]
-    if missing:
-        st.error('필수 입력 열이 없습니다: '+', '.join(missing))
-        st.stop()
-    if data.empty:st.warning('입력 행이 없습니다.');st.stop()
-    try:values=data[FEATURES].apply(pd.to_numeric,errors='raise').to_numpy(dtype=float)
-    except (ValueError,TypeError):st.error('특징 열에는 수치만 입력해 주세요.');st.stop()
-    if np.isinf(values).any():st.error('무한대 값은 입력할 수 없습니다.');st.stop()
-    values=np.where(np.isnan(values),np.array(MODEL['median']),values)
-    z=(values-np.array(MODEL['mean']))/np.array(MODEL['scale'])
-    contributions=z*np.array(MODEL['coef'])
-    logits=contributions.sum(axis=1)+MODEL['intercept']
-    probability=1/(1+np.exp(-np.clip(logits,-700,700)))
-    output=pd.DataFrame({'예측 범주':np.where(probability>=MODEL['threshold'],'M','B'),'M 예측 확률':probability,'임계값':MODEL['threshold']})
-    st.subheader('예측 결과')
-    st.dataframe(output,hide_index=True,width='stretch')
-    st.caption('B·M은 학습 자료의 범주입니다. 임계값 0.5, 확률은 별도로 보정하지 않았습니다.')
-    st.subheader('첫 번째 입력의 특징 기여도')
-    c=pd.Series(contributions[0],index=FEATURES)
-    top=c.loc[c.abs().nlargest(6).index].sort_values()
-    st.bar_chart(top,horizontal=True,color='#2457d6')
-    st.caption('표준화 특징 × 학습 계수. 양수는 M의 로그 오즈를 높이고 음수는 낮춥니다. SHAP 그림이나 질환의 원인으로 해석하지 않습니다.')
-    st.download_button('예측 CSV 받기',output.to_csv(index=False).encode('utf-8-sig'),'predictions.csv','text/csv')
-with st.expander('모델·입력·검증 정보'):
-    st.write('모델: 로지스틱 회귀 C=0.1. 학습 자료에서 추정한 결측 대체·표준화와 30개 입력 순서를 저장해 사용합니다.')
-    st.write('수업용 내부 분할 결과이며 외부 기관·임상 환경에서 검증하지 않았습니다. 앱은 입력을 별도 저장하지 않습니다.')
-    st.write('모델 버전: '+MODEL['version'])
-    st.json({'inputFeatures':FEATURES,'source':MODEL['source']})
-st.caption('배포 확인: GitHub 업데이트 반영 완료 · 같은 입력의 예측값을 다시 확인합니다.')
+ if list(data.columns)!=['ecg_mV']:st.error('ecg_mV 열 하나만 있는 파일을 사용해 주세요.');st.stop()
+ try:raw=pd.to_numeric(data.ecg_mV,errors='raise').to_numpy(dtype=float)
+ except Exception:st.error('ECG 열에는 수치가 필요합니다.');st.stop()
+ if not 2700<=len(raw)<=18300:st.error('이 모델은 300Hz, 9～61초 기록을 사용합니다. 입력 조건을 확인해 주세요.');st.stop()
+ try:x=extract(raw)
+ except ValueError as e:st.error(str(e));st.stop()
+ p=predict(x)[0];c=int(p.argmax());st.subheader('판독 결과: '+labels[c])
+ st.write(f'가장 높은 모델 점수: {p[c]:.3f}'+(f' · 원자료 정답과 {"일치" if labels[c]==truth else "불일치"}' if truth else ''))
+ st.dataframe(pd.DataFrame({'판독 범주':labels,'모델 점수':np.round(p,4)}),hide_index=True,width='stretch')
+ st.caption('가장 높은 점수의 범주를 선택합니다. 점수는 보정된 진단 확률이 아닙니다.')
+ st.subheader('입력 ECG');st.line_chart(pd.DataFrame({'시간(초)':np.arange(len(raw))/300,'ECG(mV)':raw}),x='시간(초)',y='ECG(mV)',color='#2457d6',height=220)
+ with st.expander('예측에 영향을 준 특징 확인'):
+  altered=np.repeat(x[None],len(x),axis=0)
+  for j in range(len(x)):altered[j,j]=MODEL['mean'][j]
+  delta=p[c]-predict(altered)[:,c];idx=np.argsort(abs(delta))[-5:];st.bar_chart(pd.Series(delta[idx],index=[FEATURES[j] for j in idx]),horizontal=True,color='#2457d6')
+  st.caption('특징 하나를 학습 평균으로 바꿨을 때 선택한 클래스의 점수 감소. SHAP이나 질환의 원인을 뜻하지 않습니다. 특징 사이 상관의 영향을 받을 수 있습니다.')
+ st.download_button('예측 결과 받기',pd.DataFrame({'판독 범주':labels,'모델 점수':p}).to_csv(index=False).encode('utf-8-sig'),'prediction.csv','text/csv')
+with st.expander('모델과 검증 범위'):
+ st.write('랜덤 포레스트, 트리120개, 깊이16. 기록별 특징14개. 학습1,439·검증480·시험481건, 시험 macro-F1 0.659. 기록·동일 신호 중복을 막았지만 환자 ID가 공개되지 않아 환자 독립성을 확인하지 못했습니다.')
+ st.write('기타 리듬은 특정 부정맥 하나가 아닙니다. 심실빈맥 전용 라벨은 없습니다. 입력을 별도 저장하지 않습니다.')
+ st.link_button('공식 데이터와 판독 기준',MODEL['source'])
+st.caption('배포 확인: ECG 부정맥 판독 모델 반영 완료 · 같은 입력의 예측값을 다시 확인합니다.')

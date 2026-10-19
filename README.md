@@ -1,26 +1,18 @@
-# 의료기기 DX 배포 실습 예제
+# ECG 부정맥 판독 시제품
 
-공개 K01 데이터로 학습한 로지스틱 회귀를 Streamlit으로 연결한 교육용 예제입니다. 진단 목적으로 사용할 수 없습니다.
+PhysioNet/CinC 2017의 ECG 한 기록을 정상 리듬, 심방세동, 기타 리듬, 판독 곤란으로 분류하는 수업용 앱입니다.
 
-- app.py: 실행 파일
-- model.json: 사전 학습한 모델·전처리·입력 순서. 앱에서 재학습하지 않습니다.
-- example-input.csv: 공개 자료의 범주별 중앙값으로 만든 예시 2건. 실제 개인의 진료기록이 아닙니다.
-- requirements.txt: 실제 검증 환경의 패키지
-- verification.json: 원래 저장 모델과 이식한 모델의 예측 대조 결과
-- Python: 3.11 권장. Community Cloud에서 동일 버전을 선택합니다.
+입력은 300Hz, mV 단위의 ecg_mV 열이 있는 CSV입니다. 공개 기록 네 건을 예제로 포함했습니다. 원문 출처와 기록 번호는 앱에 표시합니다.
 
-자료 출처: https://www.kaggle.com/datasets/uciml/breast-cancer-wisconsin-data
+Codex에 다음과 같이 요청합니다.
 
-원자료: UCI Breast Cancer Wisconsin (Diagnostic), https://archive.ics.uci.edu/dataset/17/breast+cancer+wisconsin+diagnostic . 원자료의 이용 조건을 확인해 재사용합니다.
+“이 폴더의 의존성을 설치하고 Streamlit 앱을 실행해서 브라우저로 열어줘. 예제 네 건의 예측과 저장 모델 결과가 일치하는지 확인해줘.”
 
-수업용 내부 학습 결과이며 외부 기관 검증·임상적 유용성 검증을 수행하지 않았습니다. 예측 확률은 별도로 보정하지 않았습니다.
+GitHub 게시도 Codex에 요청합니다.
 
-## 프롬프트로 실행
+“공개 가능한 파일을 확인하고 GitHub 저장소에 게시해줘. Streamlit 배포에 쓸 저장소, 브랜치, 실행 파일, Python 버전을 알려줘.”
 
-“이 폴더의 requirements.txt로 환경을 준비하고 Streamlit 앱을 실행해줘. 예시 2건의 결과를 verification.json과 비교해줘.”
+모델은 랜덤 포레스트 120개 트리, 깊이16입니다. 원래 모델의 전처리와 트리를 JSON으로 내보내고 시험481건에서 예측 일치를 검증했습니다. 2,400건 교육용 부분집합의 내부 평가이며 환자 식별자가 공개되지 않아 환자 독립성은 확인할 수 없습니다. 임상 진단용 모델이 아닙니다.
 
-## 프롬프트로 게시·배포
-
-“공개할 파일 목록을 확인하고 GitHub에 게시해줘. Streamlit에 입력할 저장소·브랜치·실행 파일·Python 버전을 알려줘.”
-
-원저자: William Wolberg, Olvi Mangasarian, Nick Street, W. Street. UCI 원자료 CC BY 4.0, https://doi.org/10.24432/C5DW2B . 공개 예제 입력은 범주별 중앙값으로 변형했습니다.
+공식 데이터: https://physionet.org/content/challenge-2017/1.0.0/
+Clifford et al., AF Classification from a Short Single Lead ECG Recording, PhysioNet/CinC Challenge 2017. DOI: 10.22489/CinC.2017.065-469.

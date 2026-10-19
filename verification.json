@@ -1,13 +1,23 @@
 {
-  "syntheticInputs": "public dataset class medians, not individual patient rows",
-  "predictions": [
-    "B",
-    "M"
+  "portable_model_max_error": 1.1102230246251565e-16,
+  "test_records": 481,
+  "examples": [
+    {
+      "example": 0,
+      "result": "판독 결과: 정상 리듬"
+    },
+    {
+      "example": 1,
+      "result": "판독 결과: 심방세동"
+    },
+    {
+      "example": 2,
+      "result": "판독 결과: 기타 리듬"
+    },
+    {
+      "example": 3,
+      "result": "판독 결과: 기타 리듬"
+    }
   ],
-  "probabilities": [
-    0.018234667866816847,
-    0.9851683806858704
-  ],
-  "portableModelMaxError": 0.0,
-  "threshold": 0.5
+  "csv_upload_view": true
 }
